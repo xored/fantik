@@ -7,7 +7,7 @@ public class FunctionFlow
   
   static 
   {
-    factory = Desktop.platform == "browser" ? FunctionFlowNativeFactory() : FunctionFlowActorFactory()
+    factory = Env.cur.runtime == "js" ? FunctionFlowNativeFactory() : FunctionFlowActorFactory()
   }
   
   ** Returns a new function that will execute only once, 
