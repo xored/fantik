@@ -6,7 +6,7 @@ public final class ClientAppLoader
   private const Str podName
   
   private const Uri[] jsFiles := [
-    `dynatree/jquery.min.js`,
+    `jquery.min.js`,
     `dynatree/jquery-ui.custom.min.js`,
     `dynatree/jquery.cookie.js`,
     `dynatree/jquery.dynatree.min.js`,

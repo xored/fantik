@@ -4,9 +4,10 @@ class Build : build::BuildPod
   new make()
   {
     podName = "fantik"
-    version = Version.fromStr("0.0.1")
+    version = Version("0.0.2")
     summary = "Fantom Web Widget Toolkit"
-    srcDirs = [`fan/`, `fan/Utils/`, `fan/Utils/FunctionFlow/`, `fan/DynaTree/`, `fan/DynaTree/Events/`, `fan/AceTextEditor/`, `fan/AceTextEditor/Types/`]
+    
+    srcDirs = [`fan/`, `fan/Utils/`, `fan/Utils/FunctionFlow/`, `fan/DynaTree/`, `fan/DynaTree/Events/`, `fan/Ajax/`, `fan/Ajax/Events/`, `fan/AceTextEditor/`, `fan/AceTextEditor/Types/`]
     
     depends = [
       // System      
@@ -15,7 +16,8 @@ class Build : build::BuildPod
     
     jsDirs = [ 
       `js/`, 
-      `js/AceTextEditor/`, 
+      `js/AceTextEditor/`,
+      `js/Ajax/`,
       `js/DynaTree/`,
       `js/Utils/FunctionFlow/`
     ]
