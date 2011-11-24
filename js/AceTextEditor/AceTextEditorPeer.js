@@ -6,6 +6,9 @@ fan.fantik.AceTextEditorPeer = (function(){
 
 		this.$ctor = function(self) {
 			this._isEditorEnabled = undefined;
+			this._initialText = "";
+			this._initialLanguageMode = null;
+			
 			this.control = null;
 			this.editor = null;			
 		}
@@ -26,8 +29,12 @@ fan.fantik.AceTextEditorPeer = (function(){
 			editorSession.on('change', function() { $this._onTextChangeWrapper.apply(self, arguments); });
 			editorSession.selection.on('changeCursor', function() { $this._onCursorChangeWrapper.apply(self, arguments); });
 			
-			// Set initial text
-			this.editor.getSession().setValue(this._initialText);			
+			// Set initial values
+			this.editor.getSession().setValue(this._initialText);
+			
+			if (this._initialLanguageMode) {
+				this.editor.getSession().setMode(this._initialLanguageMode);
+			}
 			
 			// Fix screen layout
 			setTimeout(function() {
@@ -112,19 +119,25 @@ fan.fantik.AceTextEditorPeer = (function(){
 		//------------------------------------------------------------
 		
 		this.setLanguageMode = function(self, modeId) {
-			var $this = this;
-			setTimeout(function() {
-				var languageMode = require(modeId).Mode;
-				$this.editor.getSession().setMode(new languageMode());
-			}, 0)			
+			var languageMode = new (require(modeId).Mode)();
+			
+			if (this.editor) {
+				this.editor.getSession().setMode(languageMode);
+			}
+			else {
+				this._initialLanguageMode = languageMode;
+			}
 		}
 		
 		this.setCustomSyntaxMode = function(self, syntaxTokenizer) {
-			var $this = this;
-			setTimeout(function() {
-				var mode = require("ace/mode/customSyntax").Mode;
-				$this.editor.getSession().setMode(new mode(syntaxTokenizer));
-			}, 0)			
+			var languageMode = new (require("ace/mode/customSyntax").Mode)(syntaxTokenizer);
+			
+			if (this.editor) {
+				this.editor.getSession().setMode(languageMode);
+			}
+			else {
+				this._initialLanguageMode = languageMode;
+			}
 		}
 		
 		this.getCursorPosition = function(self) {
@@ -138,13 +151,17 @@ fan.fantik.AceTextEditorPeer = (function(){
 		}
 
 		this.getCharOffset = function(self, row, column) {
-			var doc = this.editor.getSession().getDocument();
-			var newLineCharLength = doc.getNewLineCharacter().length;
+			var offset = 0;
 			
-			var offset = column;			
-			
-			for (var rowIndex = 0; rowIndex < row; rowIndex++) {
-				offset += doc.getLine(rowIndex).length + newLineCharLength;
+			if (this.editor) {
+				var doc = this.editor.getSession().getDocument();
+				var newLineCharLength = doc.getNewLineCharacter().length;
+				
+				offset = column;			
+				
+				for (var rowIndex = 0; rowIndex < row; rowIndex++) {
+					offset += doc.getLine(rowIndex).length + newLineCharLength;
+				}
 			}
 			
 			return fan.sys.Int.make(offset);
