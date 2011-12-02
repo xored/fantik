@@ -13,9 +13,32 @@ public class AceTextEditor : Pane
   public override native Size prefSize(Hints hints := Hints.defVal)
   public override native Void onLayout()
   
-  public native AceCharPosition getCursorPosition()
-  public native Int getCharOffset(Int row, Int column)  
+  public native AceCharPosition getCursorPosition()  
   public native Void setLanguageMode(Str mode)
+  
+  public native Int getCharOffset(Int row, Int column)
+  public native AceCharPosition getCharPosition(Int offset)  
+  
+  
+  ** Sets annotations to a gutter
+  public native Void setAnnotations(AceAnnotation[] annotations)
+  
+  ** Clears annotations from a gutter
+  public native Void clearAnnotations()
+  
+  
+  ** Adds a text marker and returns its Id 
+  public native Int addMarker(AceRange range, AceMarker marker)
+  
+  ** Removes a text marker
+  public native Void removeMarker(Int markerId)
+  
+  ** Clears all user markers
+  public native Void clearMarkers()
+  
+  
+  public native AceRange getRangeForWholeText()
+  
   
   public Void setCustomSyntaxColorer(AceSyntaxColorer colorer)
   {

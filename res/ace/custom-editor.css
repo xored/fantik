@@ -1,0 +1,17 @@
+.ace_marker_text_error {
+	position: absolute;
+    z-index: 6;
+	border-bottom: 1px dotted #FF0000;
+}
+
+.ace_marker_text_warning {
+	position: absolute;
+    z-index: 6;
+	border-bottom: 1px dotted #FF9900;
+}
+
+.ace_marker_text_info {
+	position: absolute;
+    z-index: 6;
+	border-bottom: 1px dotted #009900;
+}

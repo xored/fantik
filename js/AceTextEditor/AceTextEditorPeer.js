@@ -8,6 +8,9 @@ fan.fantik.AceTextEditorPeer = (function(){
 			this._isEditorEnabled = undefined;
 			this._initialText = "";
 			this._initialLanguageMode = null;
+			this._initialized = false;
+			
+			this._userMarkers = {};
 			
 			this.control = null;
 			this.editor = null;			
@@ -35,6 +38,8 @@ fan.fantik.AceTextEditorPeer = (function(){
 			if (this._initialLanguageMode) {
 				this.editor.getSession().setMode(this._initialLanguageMode);
 			}
+			
+			this._initialized = true;
 			
 			// Fix screen layout
 			setTimeout(function() {
@@ -165,6 +170,114 @@ fan.fantik.AceTextEditorPeer = (function(){
 			}
 			
 			return fan.sys.Int.make(offset);
+		}
+		
+		this.getCharPosition = function(self, offset) {
+			var position = { row: 0, column: 0 };
+			
+			if (this.editor) {
+				var doc = this.editor.getSession().getDocument();
+
+			    offset = Math.max(offset, 0);
+			    var row = 0;
+			    var lines = doc.getLength();
+			    var newLineCharLength = doc.getNewLineCharacter().length;
+			    
+			    while (offset > 0 && row < lines)
+			    {
+			      var lineSize = doc.getLine(row).length;
+
+			      if (offset <= lineSize)
+			      {
+			        break;
+			      }
+			      
+			      offset -= lineSize;
+			      offset -= newLineCharLength;
+			      row += 1;
+			    }
+			    
+			    position.row = row;
+			    position.column = offset;
+			}
+			
+			return fan.fantik.AceCharPosition.make(position.row, position.column);
+		}
+		
+		// Sets annotations to a gutter
+		this.setAnnotations = function(self, annotations) {
+			if (!this._initialized) return;
+			
+	    	var jsAnnotations = [];
+	    	for (var i = 0; i < annotations.m_values.length; i++) {
+	    		var annotation = annotations.m_values[i];
+	    		jsAnnotations[i] = annotation.peer.toNative(annotation);
+	    	}
+	    	
+	    	this.editor.getSession().setAnnotations(jsAnnotations);
+		}
+		  
+		// Clears annotations from a gutter
+		this.clearAnnotations = function(self) {
+			if (!this._initialized) return;
+			
+			this.editor.getSession().clearAnnotations();
+		}
+		
+		
+		// Adds a text marker and returns its Id
+		this.addMarker = function(self, range, marker) {
+			if (!this._initialized) return;
+			
+			var id = this.editor.getSession().addMarker(
+				range.peer.toNative(range),
+				marker.m_cssClass,
+				marker.m_type.m_name,
+				marker.m_inFront
+			);
+			
+			this._userMarkers[id] = marker;
+			
+			return id;
+		}
+		
+		// Removes a text marker
+		this.removeMarker = function(self, markerId) {
+			if (!this._initialized) return;
+			
+			if (this._userMarkers[markerId] && this._userMarkers.hasOwnProperty(markerId)) {
+				delete this._userMarkers[markerId];
+			}
+			
+			this.editor.getSession().removeMarker(markerId);
+		}
+		
+		// Clears all user markers
+		this.clearMarkers = function(self) {
+			if (!this._initialized) return;
+			
+			for (var id in this._userMarkers) {
+				if (this._userMarkers.hasOwnProperty(id)) {
+					this.removeMarker(self, id);
+				}
+			}
+		}
+				
+		
+		this.getRangeForWholeText = function(self) {
+			var endRow = 0;
+		    var endColumn = 0;
+		    
+		    if (this._initialized) {
+		    	var doc = this.editor.getSession().getDocument();
+		    	var lines = doc.getLength();
+		    	if (lines > 0) {
+			    	endRow = lines - 1;		    	
+				    endColumn = Math.max(0, doc.getLine(endRow).length - 1);
+		    	}
+		    }
+		    
+		    return fan.fantik.AceRange.make(0, 0, endRow, endColumn);
 		}
 		
 		

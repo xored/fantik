@@ -51,7 +51,7 @@ fan.fantik.DynaTreeNodePeer = (function(){
 		this.addChild = function(self, model, beforeNode) {
 			var beforeTreeNode = beforeNode && beforeNode.peer.treeNode;
 			
-			var nodeData = model.peer.toJsObject(model);
+			var nodeData = model.peer.toNative(model);
 			
 			var newTreeNode = this._node.addChild(nodeData, beforeTreeNode);
 			return peer.getDynaTreeNode(newTreeNode);
@@ -63,7 +63,7 @@ fan.fantik.DynaTreeNodePeer = (function(){
 			var nodeDataArray = [];
 			for (var i = 0; i < models.m_values.length; i++) {
 				var model = models.m_values[i];
-				nodeDataArray[i] = model.peer.toJsObject(model);
+				nodeDataArray[i] = model.peer.toNative(model);
 			}
 			
 			this._node.addChild(nodeDataArray, beforeTreeNode);

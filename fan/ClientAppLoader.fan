@@ -16,6 +16,7 @@ public final class ClientAppLoader
   ]
   
   private const Uri[] cssFiles := [
+    `ace/custom-editor.css`,
     `dynatree/skin-fwt/ui.dynatree.css`
   ]    
   

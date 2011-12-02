@@ -7,7 +7,7 @@ fan.fantik.DynaTreeNodeModelPeer = (function(){
 			// Do nothing
 		}
 		
-		this.toJsObject = function(self) {
+		this.toNative = function(self) {
 			var obj = {};
 			obj.title = self.m_title;
 			obj.tag = self.m_tag;

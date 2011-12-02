@@ -55,5 +55,5 @@ public class DynaTreeNodeModel
   }
   
   
-  private native Int forcePeerCreation
+  private native Void toNative()
 }
