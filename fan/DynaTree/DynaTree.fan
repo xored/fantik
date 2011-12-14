@@ -18,6 +18,14 @@ public class DynaTree : Pane
   
   
   //------------------------------------------------------------
+  // Native properties of DynaTree
+  //------------------------------------------------------------
+  
+  ** Automatically collapse all siblings, when a node is expanded.
+  public native Bool autoCollapse
+  
+  
+  //------------------------------------------------------------
   // Native methods of DynaTree
   //------------------------------------------------------------
   

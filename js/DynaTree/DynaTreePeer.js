@@ -9,6 +9,7 @@ fan.fantik.DynaTreePeer = (function(){
 			
 			this.control = null;
 			this.tree = null;
+			this.$treeElement = null;
 			this.rootNode = null;
 			
 			// alias
@@ -20,6 +21,8 @@ fan.fantik.DynaTreePeer = (function(){
 			
 			var options = {
 				debugLevel: 0, // 0:quiet, 1:normal, 2:debug
+				
+				autoCollapse: this.m_autoCollapse,
 				
 				// Bind event wrappers
 				onPostInit: function() { $this._onPostInitWrapper.apply(self, arguments); },
@@ -34,7 +37,8 @@ fan.fantik.DynaTreePeer = (function(){
 			
 			var treeElement = jQuery(placeholder).dynatree(options)[0];
 			
-			this.rootNode = jQuery(treeElement).dynatree("getRoot");
+			this.$treeElement = jQuery(treeElement);
+			this.rootNode = this.$treeElement.dynatree("getRoot");
 			this.tree = this.rootNode.tree;
 			self.m_root = this._getDynaTreeNode(this.rootNode);
 			
@@ -93,6 +97,22 @@ fan.fantik.DynaTreePeer = (function(){
 			}
 		}
 		
+		//------------------------------------------------------------
+		// Native properties of DynaTree
+		//------------------------------------------------------------
+		
+		this.m_autoCollapse = false;
+		
+		this.autoCollapse = function(self) {
+			return this.m_autoCollapse;
+		}		
+		this.autoCollapse$ = function(self, value) {
+			this.m_autoCollapse = value;
+			if (this.tree) {
+				this.$treeElement.dynatree("option", "autoCollapse", value);
+				//this.tree.option("autoCollapse", value);
+			}
+		}
 		
 		//------------------------------------------------------------
 		// Native methods of DynaTree
