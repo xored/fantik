@@ -8,11 +8,12 @@ public class AceTextEditor : Pane
   public RxEvent cursorChanged := RxEvent() { private set }
 
   public native Str text
+  public native Bool isReadonly
   
   
   public override native Size prefSize(Hints hints := Hints.defVal)
   public override native Void onLayout()
-  
+      
   public native AceCharPosition getCursorPosition()  
   public native Void setLanguageMode(Str mode)
   
@@ -36,6 +37,11 @@ public class AceTextEditor : Pane
   ** Clears all user markers
   public native Void clearMarkers()
   
+  ** Adds CSS class name to the editor element
+  public native Void addCssClass(Str cssClassName)
+  
+  ** Removes CSS class name from the editor element
+  public native Void removeCssClass(Str cssClassName)  
   
   public native AceRange getRangeForWholeText()
   

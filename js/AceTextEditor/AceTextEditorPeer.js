@@ -8,7 +8,9 @@ fan.fantik.AceTextEditorPeer = (function(){
 			this._isEditorEnabled = undefined;
 			this._initialText = "";
 			this._initialLanguageMode = null;
+			this._initialReadonlyMode = false;
 			this._initialized = false;
+			this._deferredCalls = [];
 			
 			this._userMarkers = {};
 			
@@ -33,7 +35,8 @@ fan.fantik.AceTextEditorPeer = (function(){
 			editorSession.selection.on('changeCursor', function() { $this._onCursorChangeWrapper.apply(self, arguments); });
 			
 			// Set initial values
-			this.editor.getSession().setValue(this._initialText);
+			this.editor.setReadOnly(this._initialReadonlyMode);
+			this.editor.getSession().setValue(this._initialText);			
 			
 			if (this._initialLanguageMode) {
 				this.editor.getSession().setMode(this._initialLanguageMode);
@@ -41,8 +44,9 @@ fan.fantik.AceTextEditorPeer = (function(){
 			
 			this._initialized = true;
 			
-			// Fix screen layout
+			// Fix screen layout & call deferred functions
 			setTimeout(function() {
+				$this._executeDeferredCalls();				
 				$this.editor.renderer.onResize(true);
 			}, 0);
 			
@@ -53,7 +57,6 @@ fan.fantik.AceTextEditorPeer = (function(){
 		//------------------------------------------------------------
 		// Getter and setters
 		//------------------------------------------------------------
-		this._initialText = "";
 		this.text = function(self) {
 			if (this.editor) {
 				return this.editor.getSession().getValue();
@@ -67,6 +70,18 @@ fan.fantik.AceTextEditorPeer = (function(){
 			else {
 				this._initialText = value;
 			}
+		}
+				
+		this.isReadonly = function(self) {
+			return this.editor ? this.editor.getReadOnly() : this._initialReadonlyMode;						
+		}		
+		this.isReadonly$ = function(self, value) {
+			if (!this.editor) {
+				this._initialReadonlyMode = value;
+				return;
+			}
+			
+			this.editor.setReadOnly(value);
 		}
 
 		
@@ -122,6 +137,31 @@ fan.fantik.AceTextEditorPeer = (function(){
 		//------------------------------------------------------------
 		// Native methods of AceTextEditor
 		//------------------------------------------------------------
+		this._deferCall = function(context, fn, args) {
+			this._deferredCalls.push(function() {
+				fn.apply(context, args);
+			})
+		}		
+		
+		this._executeDeferredCalls = function(context, fn, args) {
+			for (var i = 0; i < this._deferredCalls.length; i++) {
+				this._deferredCalls[i]();
+			}				
+			this._deferredCalls.length = 0;
+		}
+		
+		
+		this.addCssClass = function(self, cssClassName) {
+			if (!this.editor) { this._deferCall(this, arguments.callee, arguments); return; }
+			
+			this.editor.setStyle(cssClassName);
+		}
+		
+		this.removeCssClass = function(self, cssClassName) {
+			if (!this.editor) { this._deferCall(this, arguments.callee, arguments); return; }
+			
+			this.editor.unsetStyle(cssClassName);
+		}
 		
 		this.setLanguageMode = function(self, modeId) {
 			var languageMode = new (require(modeId).Mode)();
