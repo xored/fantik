@@ -5,11 +5,7 @@ fan.fantik.AceTextEditorPeer = (function(){
 	(function(){
 
 		this.$ctor = function(self) {
-			this._isEditorEnabled = undefined;
-			this._initialText = "";
-			this._initialLanguageMode = null;
-			this._initialReadonlyMode = false;
-			this._initialized = false;
+			this._created = false;
 			this._deferredCalls = [];
 			
 			this._userMarkers = {};
@@ -35,18 +31,11 @@ fan.fantik.AceTextEditorPeer = (function(){
 			editorSession.selection.on('changeCursor', function() { $this._onCursorChangeWrapper.apply(self, arguments); });
 			
 			// Set initial values
-			this.editor.setReadOnly(this._initialReadonlyMode);
-			this.editor.getSession().setValue(this._initialText);			
+			this._created = true;
+			this._executeDeferredCalls();
 			
-			if (this._initialLanguageMode) {
-				this.editor.getSession().setMode(this._initialLanguageMode);
-			}
-			
-			this._initialized = true;
-			
-			// Fix screen layout & call deferred functions
-			setTimeout(function() {
-				$this._executeDeferredCalls();				
+			// Fix screen layout
+			setTimeout(function() {								
 				$this.editor.renderer.onResize(true);
 			}, 0);
 			
@@ -57,29 +46,26 @@ fan.fantik.AceTextEditorPeer = (function(){
 		//------------------------------------------------------------
 		// Getter and setters
 		//------------------------------------------------------------
+		this.m_text = "";
 		this.text = function(self) {
-			if (this.editor) {
-				return this.editor.getSession().getValue();
-			}
-			return this._initialText;
+			return this.editor ? this.editor.getSession().getValue() : this.m_text;
 		}		
 		this.text$ = function(self, value) {
-			if (this.editor) {
-				this.editor.getSession().setValue(value);
-			}
-			else {
-				this._initialText = value;
-			}
+			this.m_text = value;
+			
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
+			
+			this.editor.getSession().setValue(value);
 		}
-				
+		
+		this.m_isReadonly = false;		
 		this.isReadonly = function(self) {
-			return this.editor ? this.editor.getReadOnly() : this._initialReadonlyMode;						
+			return this.editor ? this.editor.getReadOnly() : this.m_isReadonly;						
 		}		
 		this.isReadonly$ = function(self, value) {
-			if (!this.editor) {
-				this._initialReadonlyMode = value;
-				return;
-			}
+			this.m_isReadonly = value;
+
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
 			this.editor.setReadOnly(value);
 		}
@@ -107,12 +93,7 @@ fan.fantik.AceTextEditorPeer = (function(){
 		}
 
 		this.sync = function(self) {
-			if (this.m_enabled !== this._isEditorEnabled) {				
-				this._isEditorEnabled = this.m_enabled;
-				
-				this.editor.setReadOnly(this.m_editable === false);
-				this.control.style.background = this.m_enabled ? "#fff" : "#e4e4e4";
-			}
+			this.control.style.background = this.m_enabled ? "#fff" : "#e4e4e4";
 			
 			// sync control size
 			this.control.style.width  = this.m_size.m_w + "px";
@@ -134,13 +115,16 @@ fan.fantik.AceTextEditorPeer = (function(){
 			}
 		}
 		
+		
 		//------------------------------------------------------------
-		// Native methods of AceTextEditor
+		// Helpers
 		//------------------------------------------------------------
+		
 		this._deferCall = function(context, fn, args) {
-			this._deferredCalls.push(function() {
+			// Queue a call
+			this._deferredCalls[this._deferredCalls.length] = function() {
 				fn.apply(context, args);
-			})
+			}
 		}		
 		
 		this._executeDeferredCalls = function(context, fn, args) {
@@ -151,38 +135,34 @@ fan.fantik.AceTextEditorPeer = (function(){
 		}
 		
 		
+		//------------------------------------------------------------
+		// Native methods of AceTextEditor
+		//------------------------------------------------------------
+		
 		this.addCssClass = function(self, cssClassName) {
-			if (!this.editor) { this._deferCall(this, arguments.callee, arguments); return; }
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
 			this.editor.setStyle(cssClassName);
 		}
 		
 		this.removeCssClass = function(self, cssClassName) {
-			if (!this.editor) { this._deferCall(this, arguments.callee, arguments); return; }
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
 			this.editor.unsetStyle(cssClassName);
 		}
 		
 		this.setLanguageMode = function(self, modeId) {
-			var languageMode = new (require(modeId).Mode)();
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
-			if (this.editor) {
-				this.editor.getSession().setMode(languageMode);
-			}
-			else {
-				this._initialLanguageMode = languageMode;
-			}
+			var languageMode = new (require(modeId).Mode)();
+			this.editor.getSession().setMode(languageMode);
 		}
 		
 		this.setCustomSyntaxMode = function(self, syntaxTokenizer) {
-			var languageMode = new (require("ace/mode/customSyntax").Mode)(syntaxTokenizer);
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
-			if (this.editor) {
-				this.editor.getSession().setMode(languageMode);
-			}
-			else {
-				this._initialLanguageMode = languageMode;
-			}
+			var languageMode = new (require("ace/mode/customSyntax").Mode)(syntaxTokenizer);
+			this.editor.getSession().setMode(languageMode);
 		}
 		
 		this.getCursorPosition = function(self) {
@@ -246,7 +226,7 @@ fan.fantik.AceTextEditorPeer = (function(){
 		
 		// Sets annotations to a gutter
 		this.setAnnotations = function(self, annotations) {
-			if (!this._initialized) return;
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
 	    	var jsAnnotations = [];
 	    	for (var i = 0; i < annotations.m_values.length; i++) {
@@ -259,7 +239,7 @@ fan.fantik.AceTextEditorPeer = (function(){
 		  
 		// Clears annotations from a gutter
 		this.clearAnnotations = function(self) {
-			if (!this._initialized) return;
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
 			this.editor.getSession().clearAnnotations();
 		}
@@ -267,8 +247,8 @@ fan.fantik.AceTextEditorPeer = (function(){
 		
 		// Adds a text marker and returns its Id
 		this.addMarker = function(self, range, marker) {
-			if (!this._initialized) return;
-			
+			if (!this._created) return;
+
 			var id = this.editor.getSession().addMarker(
 				range.peer.toNative(range),
 				marker.m_cssClass,
@@ -283,7 +263,7 @@ fan.fantik.AceTextEditorPeer = (function(){
 		
 		// Removes a text marker
 		this.removeMarker = function(self, markerId) {
-			if (!this._initialized) return;
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
 			if (this._userMarkers[markerId] && this._userMarkers.hasOwnProperty(markerId)) {
 				delete this._userMarkers[markerId];
@@ -294,7 +274,7 @@ fan.fantik.AceTextEditorPeer = (function(){
 		
 		// Clears all user markers
 		this.clearMarkers = function(self) {
-			if (!this._initialized) return;
+			if (!this._created) { this._deferCall(this, arguments.callee, arguments); return; }
 			
 			for (var id in this._userMarkers) {
 				if (this._userMarkers.hasOwnProperty(id)) {
@@ -308,7 +288,7 @@ fan.fantik.AceTextEditorPeer = (function(){
 			var endRow = 0;
 		    var endColumn = 0;
 		    
-		    if (this._initialized) {
+		    if (this._created) {
 		    	var doc = this.editor.getSession().getDocument();
 		    	var lines = doc.getLength();
 		    	if (lines > 0) {
