@@ -8,7 +8,7 @@ public class RxEventArgs
 @Js
 public final class RxEvent
 {
-  private |EventArgs, Obj|[] handlers := [,]  
+  private |RxEventArgs, Obj|[] handlers := [,]  
   private Type argType   
   private Bool safeInvokation
   
